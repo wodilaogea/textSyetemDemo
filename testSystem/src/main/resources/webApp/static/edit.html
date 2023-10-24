@@ -1,0 +1,193 @@
+<!--
+ * @Author: wodilaoge 2734905941@qq.com
+ * @Date: 2023-10-12 00:28:09
+ * @LastEditors: wodilaoge 2734905941@qq.com
+ * @LastEditTime: 2023-10-12 00:30:33
+ * @FilePath: \textSyetemDemo\brand.html
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        p{
+            white-space: pre-line;
+        }
+    </style>
+
+</head>
+<body>
+<div id="app">
+    <el-tabs :stretch="true" v-model="activeName" @tab-click="handleClick">
+        <el-tab-pane label="全部试题" name="first" @tab-click="random">
+            <el-collapse v-model="activeNames" @change="handleChange">
+                <el-collapse-item title="单选题" name="first">
+                    <div v-for="(timu,k) in singleChoice">
+                        <p>第{{k+1}}题，共{{singleChoice.length}}题</p>
+                        <div>{{timu.title}}</div>
+                        <div v-for="(i,j) in timu.option">
+                            {{zidian[j]}}.{{i}}
+                        </div>
+                    </div>
+
+                </el-collapse-item>
+                <el-collapse-item title="多选题" name="second">
+                    <div v-for="(timu,k) in multipleChoice">
+                        <p>第{{k+1}}题，共{{multipleChoice.length}}题</p>
+                        <div>{{timu.title}}</div>
+                        <div v-for="(i,j) in timu.option">
+                            {{zidian[j]}}.{{i}}
+                        </div>
+                    </div>
+                </el-collapse-item>
+                <el-collapse-item title="简答题" name="third">
+                    <div v-for="(timu,k) in shortAnswer">
+                        <p>第{{k+1}}题，共{{shortAnswer.length}}题</p>
+                        <div>{{timu.title}}</div>
+                        <p>{{timu.answer}}</p>
+                    </div>
+                </el-collapse-item>
+            </el-collapse>
+        </el-tab-pane>
+        <el-tab-pane label="自动组卷" name="second">
+            <el-collapse v-model="activeNames" @change="handleChange">
+                <el-collapse-item title="单选题" name="first">
+                    <div v-for="(timu,k) in randomSingleChoice.slice(0,25)">
+                        <p>第{{k+1}}题，共25题</p>
+                        <div>{{timu.title}}</div>
+                        <div v-for="(i,j) in timu.option">
+                            {{zidian[j]}}.{{i}}
+                        </div>
+                    </div>
+
+                </el-collapse-item>
+                <el-collapse-item title="多选题" name="second">
+                    <div v-for="(timu,k) in randomMultipleChoice.slice(0,10)">
+                        <p>第{{k+1}}题，共10题</p>
+                        <div>{{timu.title}}</div>
+                        <div v-for="(i,j) in timu.option">
+                            {{zidian[j]}}.{{i}}
+                        </div>
+                    </div>
+                </el-collapse-item>
+                <el-collapse-item title="简答题" name="third">
+                    <div v-for="(timu,k) in randomShortAnswer.slice(0,5)">
+                        <p>第{{k+1}}题，共5题</p>
+                        <div>{{timu.title}}</div>
+                        <p>{{timu.answer}}</p>
+                    </div>
+                </el-collapse-item>
+            </el-collapse>
+        </el-tab-pane>
+    </el-tabs>
+    
+
+</div>
+
+
+<script src="../js/vue.js"></script>
+<script src="../element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="../element-ui/lib/theme-chalk/index.css">
+
+<script src="../js/axios-0.18.0.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+        created(){
+            // this.username=sessionStorage.username
+            // if (!this.username) {
+            //     window.location.href = "./index.html"
+            // }
+            this.initialization()
+
+        },
+
+        mounted(){
+            
+        },
+
+        methods: {
+
+            openError() {
+                console.log("aaa")
+            },
+            initialization(){
+                var _this = this;
+                axios.get('../question_bank/main.json')
+                    .then((response) => {
+                        _this.questions=response.data;
+                        console.log(_this.questions)
+                        for (i=0;i<_this.questions.length;i++){
+                            if (_this.questions[i]["type"]=="单选题"){
+                                _this.singleChoice.push(_this.questions[i])
+                            }
+                            if (_this.questions[i]["type"]=="多选题"){
+                                _this.multipleChoice.push(_this.questions[i])
+                            }
+                            if (_this.questions[i]["type"]=="简答题"){
+                                _this.shortAnswer.push(_this.questions[i])
+                            }
+                        }
+                        console.log(_this.singleChoice)
+                        console.log(_this.multipleChoice)
+                        console.log(_this.shortAnswer)
+                        _this.randomSingleChoice=_this.randomArray(_this.singleChoice)
+                        _this.randomMultipleChoice=_this.randomArray(_this.multipleChoice)
+                        _this.randomShortAnswer=_this.randomArray(_this.shortAnswer)
+                        // _this.random()
+                        // console.log(_this.singleChoice)
+                        // console.log(_this.multipleChoice)
+                        // console.log(_this.shortAnswer)
+                        // console.log(_this.randomSingleChoice)
+                        // console.log(_this.randomMultipleChoice)
+                        // console.log(_this.randomShortAnswer)
+                    })
+            },
+            // random(){
+            //     this.randomSingleChoice=this.random(this.singleChoice)
+            //     this.randomMultipleChoice=this.random(this.multipleChoice)
+            //     this.randomShortAnswer=this.random(this.shortAnswer)
+            // },
+            randomArray(array) {
+                var arr=array.slice();// 浅拷贝
+                var m = arr.length,
+                    t, i;
+                while (m) {
+                    i = Math.floor(Math.random() * m--);
+                    t = arr[m];
+                    arr[m] = arr[i];
+                    arr[i] = t;
+                }
+                return arr;
+            },
+            handleClick(tab, event) {
+                // console.log(tab, event);
+            },
+            handleChange(val) {
+                // console.log(val);
+            }
+        },
+        data() {
+            return{
+                username: '',
+                questions:[],
+                singleChoice:[],
+                multipleChoice:[],
+                shortAnswer:[],
+                randomSingleChoice:[],
+                randomMultipleChoice:[],
+                randomShortAnswer:[],
+                zidian: ['A', 'B', 'C', 'D', 'E'],
+                activeName: 'first',
+                activeNames: ['first']
+            }
+        }
+    })
+
+</script>
+
+</body>
+</html>

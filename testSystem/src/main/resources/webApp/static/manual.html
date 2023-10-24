@@ -1,0 +1,572 @@
+<!--
+ * @Author: wodilaoge 2734905941@qq.com
+ * @Date: 2023-10-12 00:28:09
+ * @LastEditors: wodilaoge 2734905941@qq.com
+ * @LastEditTime: 2023-10-12 00:30:33
+ * @FilePath: \textSyetemDemo\brand.html
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        p {
+            white-space: pre-line;
+        }
+
+        .right-half {
+            /*background-color: pink;*/
+            position: fixed;
+            right: 0px;
+            width: 75%;
+            top: 60px;
+            overflow: auto;
+            height: 90%;
+        }
+
+        .left-half {
+            /*background-color: #ea68a2;*/
+            position: fixed;
+            overflow: auto;
+            left: 0px;
+            top: 60px;
+            width: 20%;
+            height: 90%;
+        }
+
+        .head-half {
+            /*background-color: #ea68a2;*/
+            position: fixed;
+
+
+        }
+
+
+    </style>
+
+</head>
+<body>
+<div id="app">
+    <div class="head-half">
+        <el-button type="primary" round @click="goAuto()" style="margin: 5px">自动组卷</el-button>
+        <el-button type="primary" round @click="exportTest()">生成试卷</el-button>
+        <el-button type="success" round @click="addQues()">新增试题</el-button>
+        <el-button type="success" round @click="checkList()">查看已选信息</el-button>
+        <el-button type="success" round @click="edit()" style="margin: 5px">编辑模式</el-button>
+        <el-button type="danger" round @click="deleteList()">批量删除</el-button>
+    </div>
+    <div class="left-half">
+        <!--        <el-button type="primary" round @click="goAuto()" style="margin: 5px">自动组卷</el-button>-->
+        <!--        <el-button type="primary" round @click="exportTest()">生成试卷</el-button>-->
+        <!--        <el-button type="danger" round @click="deleteList()">删除题目</el-button>-->
+        <!--        <el-button type="success" round @click="addQues()">新增试题</el-button>-->
+        <!--        <el-button type="success" round @click="checkList()()">查看已选信息</el-button>-->
+        <!--        <el-button type="success" round @click="checkList()()" style="margin: 5px">编辑模式</el-button>-->
+        <el-collapse v-model="activeNames">
+            <el-collapse-item title="单选题" name="1">
+                <span v-for="count in finalSingleChoice.length">
+<!--                    count从1开始-->
+                    <el-button @click="local(count-1)"
+                               :style="{background:singleCheckList.includes(count-1)?color:'',width:myWidth}">{{count}}</el-button>
+                </span>
+            </el-collapse-item>
+            <el-collapse-item title="多选题" name="2">
+                <span v-for="count in finalMultipleChoice.length">
+                    <el-button @click="local(count+finalSingleChoice.length-1)"
+                               :style="{background:multipleCheckList.includes(count-1)?color:'',width:myWidth}">{{count + finalSingleChoice.length}}</el-button>
+                </span>
+            </el-collapse-item>
+            <el-collapse-item title="简答题" name="3">
+                <span v-for="count in finalShortAnswer.length">
+                    <el-button @click="local(count+finalMultipleChoice.length+finalSingleChoice.length-1)"
+
+                               :style="{background:shortCheckList.includes(count-1)?color:'',width:myWidth}">{{count + finalMultipleChoice.length + finalSingleChoice.length}}</el-button>
+                </span>
+            </el-collapse-item>
+        </el-collapse>
+
+    </div>
+
+    <div class="right-half">
+
+        <p style="font-size: 20px;font-weight: bold;">单选题</p>
+        <el-checkbox-group v-model="singleCheckList">
+            <div v-for="(timu,k) in finalSingleChoice">
+                <el-checkbox :label="k">
+                    <p :id="k">
+                        第{{k + 1}}题，共{{finalSingleChoice.length + finalMultipleChoice.length + finalShortAnswer.length}}题<el-button v-show="isEdit" type="primary" style="margin-left:50px;" @click="updateQsForm('单选题',k)">编辑试题</el-button>
+                    </p>
+                    <div>{{timu.title}}</div>
+                    <div v-for="(i,j) in timu.option">
+                        {{zidian[j]}}.{{i}}
+                    </div>
+                </el-checkbox>
+            </div>
+        </el-checkbox-group>
+
+        <p style="font-size: 20px;font-weight: bold;">多选题</p>
+        <el-checkbox-group v-model="multipleCheckList">
+            <div v-for="(timu,k) in finalMultipleChoice">
+                <el-checkbox :label="k">
+                    <p :id="k+finalSingleChoice.length">
+                        第{{finalSingleChoice.length + k + 1}}题，共{{finalSingleChoice.length + finalMultipleChoice.length + finalShortAnswer.length}}题<el-button v-show="isEdit" type="primary" style="margin-left:50px;" @click="updateQsForm('多选题',k)">编辑试题</el-button>
+                    </p>
+                    <div>{{timu.title}}</div>
+                    <div v-for="(i,j) in timu.option">
+                        {{zidian[j]}}.{{i}}
+                    </div>
+                </el-checkbox>
+            </div>
+        </el-checkbox-group>
+
+        <p style="font-size: 20px;font-weight: bold;">简答题</p>
+        <el-checkbox-group v-model="shortCheckList">
+            <div v-for="(timu,k) in finalShortAnswer">
+                <el-checkbox :label="k">
+                    <p :id="k+finalSingleChoice.length+finalMultipleChoice.length">
+                        第{{finalSingleChoice.length + finalMultipleChoice.length + k + 1}}题，共{{finalSingleChoice.length + finalMultipleChoice.length + finalShortAnswer.length}}题<el-button v-show="isEdit" type="primary" style="margin-left:50px;" @click="updateQsForm('简答题',k)">编辑试题</el-button>
+                    </p>
+                    <div>{{timu.title}}</div>
+                    <p>{{timu.answer}}</p>
+                </el-checkbox>
+            </div>
+        </el-checkbox-group>
+    </div>
+
+    <el-dialog title="选择题型" :visible.sync="dialogTypeVisible">
+        <el-button type="primary" @click="dialogSimpleVisible=true;dialogTypeVisible=false">单选题</el-button>
+        <el-button type="primary" @click="dialogMultipleVisible = true;dialogTypeVisible=false">多选题</el-button>
+        <el-button type="primary" @click="dialogShortVisible = true;dialogTypeVisible=false">简答题</el-button>
+    </el-dialog>
+
+    <el-dialog title="单选题" :visible.sync="dialogSimpleVisible" :before-close="iniForm">
+        <el-form :model="question" label-width="80px">
+            <el-form-item label="题目">
+                <el-input v-model="question.title" type="textarea" autosize placeholder="请输入题目"></el-input>
+            </el-form-item>
+            <el-form-item label="选项">
+                <el-input v-model="question.option[0]" type="textarea" autosize placeholder="请输入选项A"></el-input>
+                <el-input v-model="question.option[1]" type="textarea" autosize placeholder="请输入选项B"></el-input>
+                <el-input v-model="question.option[2]" type="textarea" autosize placeholder="请输入选项C"></el-input>
+                <el-input v-model="question.option[3]" type="textarea" autosize placeholder="请输入选项D"></el-input>
+            </el-form-item>
+            <el-form-item label="答案">
+                <el-select v-model="question.answer">
+                    <el-option label="A" value="A"></el-option>
+                    <el-option label="B" value="B"></el-option>
+                    <el-option label="C" value="C"></el-option>
+                    <el-option label="D" value="D"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="解析">
+                <el-input v-model="question.analysis" type="textarea" autosize placeholder="请输入解析"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="iniForm()">取 消</el-button>
+            <span v-if="isAdd">
+                <el-button type="primary" @click="postMsg('单选题')">添 加</el-button>
+            </span>
+            <span v-if="isEdit">
+                <el-button type="primary" @click="updateQs('单选题')">修 改</el-button>
+            </span>
+        </div>
+    </el-dialog>
+    <el-dialog title="多选题" :visible.sync="dialogMultipleVisible" :before-close="iniForm">
+        <el-form :model="question" label-width="80px">
+            <el-form-item label="题目">
+                <el-input v-model="question.title" type="textarea" autosize placeholder="请输入题目"></el-input>
+            </el-form-item>
+            <el-form-item label="选项">
+                <el-input v-model="question.option[0]" type="textarea" autosize placeholder="请输入选项A"></el-input>
+                <el-input v-model="question.option[1]" type="textarea" autosize placeholder="请输入选项B"></el-input>
+                <el-input v-model="question.option[2]" type="textarea" autosize placeholder="请输入选项C"></el-input>
+                <el-input v-model="question.option[3]" type="textarea" autosize placeholder="请输入选项D"></el-input>
+                <el-input v-model="question.option[4]" type="textarea" autosize placeholder="请输入选项E"></el-input>
+            </el-form-item>
+            <el-form-item label="答案">
+                <el-checkbox-group v-model="formAnswer">
+                    <el-checkbox label="A">A选项</el-checkbox>
+                    <el-checkbox label="B">B选项</el-checkbox>
+                    <el-checkbox label="C">C选项</el-checkbox>
+                    <el-checkbox label="D">D选项</el-checkbox>
+                    <el-checkbox label="E">E选项</el-checkbox>
+                </el-checkbox-group>
+            </el-form-item>
+            <el-form-item label="解析">
+                <el-input v-model="question.analysis" type="textarea" autosize placeholder="请输入解析"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="iniForm()">取 消</el-button>
+            <span v-if="isAdd">
+                <el-button type="primary" @click="postMsg('多选题')">添 加</el-button>
+            </span>
+            <span v-if="isEdit">
+                <el-button type="primary" @click="updateQs('多选题')">修 改</el-button>
+            </span>
+        </div>
+    </el-dialog>
+    <el-dialog title="简答题" :visible.sync="dialogShortVisible" :before-close="iniForm">
+        <el-form :model="question" label-width="80px">
+            <el-form-item label="题目">
+                <el-input v-model="question.title" type="textarea" autosize placeholder="请输入题目"></el-input>
+            </el-form-item>
+            <el-form-item label="答案">
+                <el-input v-model="question.answer" type="textarea" autosize placeholder="请输入答案"></el-input>
+            </el-form-item>
+            <el-form-item label="解析">
+                <el-input v-model="question.analysis" type="textarea" autosize placeholder="请输入解析"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="iniForm()">取 消</el-button>
+            <span v-if="isAdd">
+                <el-button type="primary" @click="postMsg('简答题')">添 加</el-button>
+            </span>
+            <span v-if="isEdit">
+                <el-button type="primary" @click="updateQs('简答题')">修 改</el-button>
+            </span>
+        </div>
+    </el-dialog>
+</div>
+
+
+<script src="../js/vue.js"></script>
+<script src="../element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="../element-ui/lib/theme-chalk/index.css">
+
+<script src="../js/axios-0.18.0.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+        created() {
+            // this.username=sessionStorage.username
+            // if (!this.username) {
+            //     window.location.href = "./index.html"
+            // }
+            this.initialization()
+        },
+
+        mounted() {
+
+        },
+
+        methods: {
+
+            initialization() {
+                this.iniAll()
+                var _this = this;
+                // '../question_bank/main.json''http://localhost:8080/questions'
+                axios.get('http://localhost:8080/questions')
+                    .then((response) => {
+                        // console.log(response.data)
+                        _this.questions = response.data;
+                        for (i = 0; i < _this.questions.length; i++) {
+                            _this.questions[i]["option"]=JSON.parse(_this.questions[i]["option"])
+                            if (_this.questions[i]["type"] == "单选题") {
+                                _this.singleChoice.push(_this.questions[i])
+                            }
+                            if (_this.questions[i]["type"] == "多选题") {
+                                _this.multipleChoice.push(_this.questions[i])
+                            }
+                            if (_this.questions[i]["type"] == "简答题") {
+                                _this.shortAnswer.push(_this.questions[i])
+                            }
+                        }
+                        // console.log(_this.singleChoice)
+                        _this.finalSingleChoice = _this.singleChoice
+                        _this.finalMultipleChoice = _this.multipleChoice
+                        _this.finalShortAnswer = _this.shortAnswer
+                        // console.log(_this.finalSingleChoice)
+                        // console.log(_this.finalMultipleChoice)
+                        // console.log(_this.finalShortAnswer)
+
+
+                    })
+            },
+            iniAll(){
+                this.questions= [],
+                this.singleChoice= [],
+                this.multipleChoice= [],
+                this.shortAnswer= [],
+                this.finalSingleChoice=[],
+                this.finalMultipleChoice= [],
+                this.finalShortAnswer= [],
+                this.zidian= ['A', 'B', 'C', 'D', 'E'],
+                this.activeNames= ['1'],
+                this.singleCheckList= [],
+                this.multipleCheckList= [],
+                this.shortCheckList= [],
+                this.color= "#77d4e5",
+                this.myWidth= "20%",
+                this.isEdit= false,
+                this.dialogTypeVisible=false,
+                this.dialogMultipleVisible=false,
+                this.dialogSimpleVisible=false,
+                this.dialogShortVisible=false,
+                this.formAnswer=[],
+                this.question={
+                        analysis: "",
+                        answer: "",
+                        option: [],
+                        title: "",
+                        type: ""
+                    }
+            },
+            iniForm(){
+                this.question={
+                    analysis: "",
+                    answer: "",
+                    option: [],
+                    title: "",
+                    type: "",
+                };
+                this.dialogMultipleVisible=false;
+                this.dialogSimpleVisible=false;
+                this.dialogShortVisible=false;
+                this.isAdd=false;
+                this.isEdit=false
+            },
+
+            randomArray(array, num) {
+                var arr = array.slice();// 浅拷贝
+                var m = arr.length,
+                    t, i;
+                while (m) {
+                    i = Math.floor(Math.random() * m--);
+                    t = arr[m];
+                    arr[m] = arr[i];
+                    arr[i] = t;
+                }
+                return arr.slice(0, num);
+            },
+            local(loc) {
+                window.location.href = `#${loc}`
+            },
+            goAuto() {
+                window.location.href = "auto.html";
+            },
+            exportTest() {
+                if (this.singleCheckList.length+this.multipleCheckList.length+this.shortCheckList.length==0){
+                    this.$message({
+                        message: '请先选择题目',
+                        type: 'warning'
+                    });
+                }else {
+                    sessionStorage.type = "manual"
+                    sessionStorage.singleCheckList = JSON.stringify(this.singleCheckList)
+                    sessionStorage.multipleCheckList = JSON.stringify(this.multipleCheckList)
+                    sessionStorage.shortCheckList = JSON.stringify(this.shortCheckList)
+                    window.location.href = "test.html";
+                }
+
+            },
+            delById(id){
+                var _this=this
+                axios.delete("http://localhost:8080/questions/"+id).then((res)=>{
+                    if(res.data == true){
+                        this.$message.success("删除成功");
+                    }else{
+                        this.$message.error("删除失败");
+                    }
+                }).finally(()=>{
+
+                });
+            },
+            deleteList() {
+                var _this=this
+                this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    if (this.singleCheckList.length+this.multipleCheckList.length+this.shortCheckList.length==0){
+                        this.$message({
+                            message: '请先选择题目',
+                            type: 'warning'
+                        });
+                    }else {
+                        for (simple of _this.singleCheckList){
+                            console.log(typeof _this.singleChoice[simple].id)
+                            _this.delById(_this.singleChoice[simple].id)
+                        }
+                        for (simple of _this.multipleCheckList){
+                            _this.delById(_this.multipleChoice[simple].id)
+                        }
+                        for (simple of _this.shortCheckList){
+                            _this.delById(_this.shortAnswer[simple].id)
+                        }
+                        _this.initialization()
+                    }
+
+                    // axios.delete("/books/"+row.id).then((res)=>{
+                    //     if(res.data == true){
+                    //         this.$message.success("删除成功");
+                    //     }else{
+                    //         this.$message.error("删除失败");
+                    //     }
+                    // }).finally(()=>{
+                    //     this.initialization();
+                    // });
+
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+            },
+
+            addQues() {
+                this.isAdd=true;
+                this.dialogTypeVisible = true;
+            },
+            checkList() {
+                this.$alert(`共选择${this.singleCheckList.length + this.multipleCheckList.length + this.shortCheckList.length}题
+                其中单选${this.singleCheckList.length}题
+                多选${this.multipleCheckList.length}题
+                简答${this.shortCheckList.length}题`, '已选题目信息', {
+                    confirmButtonText: '确定',
+                    callback: action => {
+
+                    }
+                });
+            },
+            edit() {
+                if (!this.isEdit) {
+                    this.isEdit = true;
+                } else {
+                    this.isEdit = false;
+                }
+            },
+            updateQsForm(type,k){
+                if (type=="多选题"){
+                    this.formAnswer=this.finalMultipleChoice[k].answer.split("")
+                    this.question=this.finalMultipleChoice[k]
+                    this.dialogMultipleVisible=true;
+                }
+                if (type=="单选题"){
+                    this.question=this.finalSingleChoice[k]
+                    this.dialogSimpleVisible=true;
+                }
+                if (type=="简答题"){
+                    this.question=this.finalShortAnswer[k]
+                    this.dialogShortVisible=true;
+                }
+            },
+            updateQs(type){
+                this.question.type = type;
+                this.question.option = JSON.stringify(this.question.option)
+                if (type=="多选题"){
+                    this.question.answer=''
+                    this.formAnswer=this.formAnswer.sort()
+                    for (a of this.formAnswer){
+                        this.question.answer=this.question.answer+a
+                    }
+                    console.log(this.question.answer)
+                }
+                console.log(this.question)
+                var _this = this
+                axios.put("http://localhost:8080/questions", this.question).then(resp => {
+                    console.log(resp.data)
+                    if(resp.data == true) {
+                        this.$message({
+                            type: 'success',
+                            message: '修改成功'
+                        })
+                        _this.initialization()
+                    }
+                    _this.iniForm()
+                    // _this.question={
+                    //     analysis: "",
+                    //     answer: "",
+                    //     option: [],
+                    //     title: "",
+                    //     type: "",
+                    // };
+                }).catch(() => {
+                    this.$message({
+                        type: 'error',
+                        message: '修改失败'
+                    });
+                })
+            },
+            postMsg(type) {
+                this.question.type = type;
+                this.question.option = JSON.stringify(this.question.option)
+                if (type=="多选题"){
+                    for (a of this.formAnswer){
+                        this.question.answer=this.question.answer+a
+                    }
+                    console.log(this.question.answer)
+                }
+                console.log(this.question)
+                var _this = this
+                axios.post("http://localhost:8080/questions", this.question).then(resp => {
+                    console.log(resp.data)
+                    if(resp.data == true) {
+                        this.$message({
+                            type: 'success',
+                            message: '添加成功'
+                        })
+                        _this.initialization()
+                    }
+                    _this.iniForm()
+                    // _this.question={
+                    //     analysis: "",
+                    //     answer: "",
+                    //     option: [],
+                    //     title: "",
+                    //     type: "",
+                    // };
+                }).catch(() => {
+                    this.$message({
+                        type: 'error',
+                        message: '添加失败'
+                    });
+                })
+            }
+        },
+        data() {
+            return {
+                username: '',
+                questions: [],
+                singleChoice: [],
+                multipleChoice: [],
+                shortAnswer: [],
+                finalSingleChoice: [],
+                finalMultipleChoice: [],
+                finalShortAnswer: [],
+                zidian: ['A', 'B', 'C', 'D', 'E'],
+                activeNames: ['1'],
+                singleCheckList: [],
+                multipleCheckList: [],
+                shortCheckList: [],
+                color: "#77d4e5",
+                myWidth: "20%",
+                isEdit: false,
+                isAdd:false,
+                dialogTypeVisible:false,
+                dialogMultipleVisible:false,
+                dialogSimpleVisible:false,
+                dialogShortVisible:false,
+                formAnswer:[],
+                question:{
+                    analysis: "",
+                    answer: "",
+                    option: [],
+                    title: "",
+                    type: ""
+                }
+            }
+        }
+    })
+
+</script>
+
+</body>
+</html>

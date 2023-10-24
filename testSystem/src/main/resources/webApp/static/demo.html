@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="app">
+    <el-button @click="log()">打印</el-button>
+    <el-checkbox-group v-model="question.answer">
+        <el-checkbox label="A">复选框 A</el-checkbox>
+        <el-checkbox label="B">复选框 B</el-checkbox>
+        <el-checkbox label="C">复选框 C</el-checkbox>
+        <el-checkbox label="D">复选框 D</el-checkbox>
+        <el-checkbox label="E">复选框 E</el-checkbox>
+    </el-checkbox-group>
+
+
+</div>
+<script src="../js/vue.js"></script>
+<script src="../element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="../element-ui/lib/theme-chalk/index.css">
+
+<script src="../js/axios-0.18.0.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+        methods:{
+            log(){
+                for (a of this.question.answer){
+                    this.str=this.str+a
+                }
+                // JSON.stringify(this.question.answer)
+                console.log(this.str)
+            }
+        },
+        data(){
+            return {
+                str:"",
+                question:{
+                    answer:[]
+                }
+            }
+        }
+
+
+    })
+
+</script>
+</body>
+</html>

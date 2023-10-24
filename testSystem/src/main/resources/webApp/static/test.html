@@ -1,0 +1,199 @@
+<!--
+ * @Author: wodilaoge 2734905941@qq.com
+ * @Date: 2023-10-12 00:28:09
+ * @LastEditors: wodilaoge 2734905941@qq.com
+ * @LastEditTime: 2023-10-12 00:30:33
+ * @FilePath: \textSyetemDemo\brand.html
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        p {
+            white-space: pre-line;
+        }
+        .right-half {
+            /*background-color: pink;*/
+            position: absolute;
+            right: 0px;
+            width: 75%;
+        }
+        .left-half {
+            /*background-color: #ea68a2;*/
+            position: fixed;
+            left: 0px;
+            width: 25%;
+            height: 100%;
+            overflow: auto;
+        }
+        .checked {
+            width:15%;
+            margin-right:5px;
+            background: #3a8ee6;
+        }
+    </style>
+
+</head>
+<body>
+<div id="app">
+
+    <div class="left-half">
+        <el-collapse v-model="activeNames">
+            <el-collapse-item title="单选题" name="1">
+                <span v-for="count in finalSingleChoice.length">
+
+                    <el-button @click="local(count-1)" class="checked">{{count}}</el-button>
+                </span>
+            </el-collapse-item>
+            <el-collapse-item title="多选题" name="2">
+                <span v-for="count in finalMultipleChoice.length">
+                    <el-button @click="local(count+finalSingleChoice.length-1)" class="checked">{{count + finalSingleChoice.length}}</el-button>
+                </span>
+            </el-collapse-item>
+            <el-collapse-item title="简答题" name="3">
+                <span v-for="count in finalShortAnswer.length">
+                    <el-button class="checked" @click="local(count+finalShortAnswer.length+finalSingleChoice.length-1)">{{count + finalShortAnswer.length + finalSingleChoice.length}}</el-button>
+                </span>
+            </el-collapse-item>
+        </el-collapse>
+
+    </div>
+
+    <div class="right-half">
+        <p style="font-size: 20px;font-weight: bold;">单选题</p>
+        <div v-for="(timu,k) in finalSingleChoice">
+            <p :id="k">
+                第{{k + 1}}题，共{{finalSingleChoice.length + finalMultipleChoice.length + finalShortAnswer.length}}题</p>
+            <div>{{timu.title}}</div>
+            <div v-for="(i,j) in timu.option">
+                {{zidian[j]}}.{{i}}
+            </div>
+        </div>
+        <p style="font-size: 20px;font-weight: bold;">多选题</p>
+        <div v-for="(timu,k) in finalMultipleChoice">
+            <p :id="k+finalSingleChoice.length">
+                第{{finalSingleChoice.length + k + 1}}题，共{{finalSingleChoice.length + finalMultipleChoice.length + finalShortAnswer.length}}题</p>
+            <div>{{timu.title}}</div>
+            <div v-for="(i,j) in timu.option">
+                {{zidian[j]}}.{{i}}
+            </div>
+        </div>
+        <p style="font-size: 20px;font-weight: bold;">简答题</p>
+        <div v-for="(timu,k) in finalShortAnswer">
+            <p :id="k+finalSingleChoice.length+finalMultipleChoice.length">
+                第{{finalSingleChoice.length + finalMultipleChoice.length + k + 1}}题，共{{finalSingleChoice.length + finalMultipleChoice.length + finalShortAnswer.length}}题</p>
+            <div>{{timu.title}}</div>
+            <p>{{timu.answer}}</p>
+        </div>
+    </div>
+
+
+
+
+</div>
+
+
+<script src="../js/vue.js"></script>
+<script src="../element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="../element-ui/lib/theme-chalk/index.css">
+
+<script src="../js/axios-0.18.0.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+        created() {
+            // this.username=sessionStorage.username
+            // if (!this.username) {
+            //     window.location.href = "./index.html"
+            // }
+            this.initialization()
+            console.log(this.id)
+        },
+
+        mounted() {
+
+        },
+
+        methods: {
+
+            initialization() {
+                var _this = this;
+                axios.get('../question_bank/main.json')
+                    .then((response) => {
+                        _this.questions = response.data;
+                        for (i = 0; i < _this.questions.length; i++) {
+                            if (_this.questions[i]["type"] == "单选题") {
+                                _this.singleChoice.push(_this.questions[i])
+                            }
+                            if (_this.questions[i]["type"] == "多选题") {
+                                _this.multipleChoice.push(_this.questions[i])
+                            }
+                            if (_this.questions[i]["type"] == "简答题") {
+                                _this.shortAnswer.push(_this.questions[i])
+                            }
+                        }
+                        if (sessionStorage.type == "auto") {
+                            _this.finalSingleChoice = _this.randomArray(_this.singleChoice, sessionStorage.simple)
+                            _this.finalMultipleChoice = _this.randomArray(_this.multipleChoice, sessionStorage.multiple)
+                            _this.finalShortAnswer = _this.randomArray(_this.shortAnswer, sessionStorage.short)
+                            console.log(_this.finalSingleChoice)
+                        } else if (sessionStorage.type == "manual") {
+                            // console.log(sessionStorage.singleCheckList)
+                            // console.log(sessionStorage.multipleCheckList)
+                            // console.log(sessionStorage.shortCheckList)
+                            _this.finalSingleChoice = _this.createArray(_this.singleChoice,JSON.parse(sessionStorage.singleCheckList))
+                            _this.finalMultipleChoice = _this.createArray(_this.multipleChoice,JSON.parse(sessionStorage.multipleCheckList))
+                            _this.finalShortAnswer = _this.createArray(_this.shortAnswer,JSON.parse(sessionStorage.shortCheckList))
+                        }
+
+                    })
+            },
+
+            randomArray(array, num) {
+                var arr = array.slice();// 浅拷贝
+                var m = arr.length,
+                    t, i;
+                while (m) {
+                    i = Math.floor(Math.random() * m--);
+                    t = arr[m];
+                    arr[m] = arr[i];
+                    arr[i] = t;
+                }
+                return arr.slice(0, num);
+            },
+            local(loc){
+                window.location.href = `#${loc}`
+            },
+            createArray(arr0,arr){
+                array=[]
+                for (i of arr){
+                    array.push(arr0[i])
+                }
+                return array
+            }
+
+        },
+        data() {
+            return {
+                username: '',
+                questions: [],
+                singleChoice: [],
+                multipleChoice: [],
+                shortAnswer: [],
+                finalSingleChoice: [],
+                finalMultipleChoice: [],
+                finalShortAnswer: [],
+                activeNames: ['1'],
+                zidian: ['A', 'B', 'C', 'D', 'E'],
+            }
+        }
+    })
+
+</script>
+
+</body>
+</html>

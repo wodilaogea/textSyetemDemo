@@ -1,0 +1,111 @@
+<!--
+ * @Author: wodilaoge 2734905941@qq.com
+ * @Date: 2023-10-12 00:28:09
+ * @LastEditors: wodilaoge 2734905941@qq.com
+ * @LastEditTime: 2023-10-12 00:30:33
+ * @FilePath: \textSyetemDemo\brand.html
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        p {
+            white-space: pre-line;
+        }
+    </style>
+
+</head>
+<body>
+<div id="app">
+    <el-dialog
+            title="请输入题目数量"
+            :visible.sync="dialogVisible"
+            width="30%"
+            :before-close="handleClose">
+
+        <el-form :model="testInfo" label-width="100px">
+            <el-form-item label="单选题个数">
+                <el-input v-model="testInfo.simple"></el-input>
+            </el-form-item>
+            <el-form-item label="多选题个数">
+                <el-input v-model="testInfo.multiple"></el-input>
+            </el-form-item>
+            <el-form-item label="简答题个数">
+                <el-input v-model="testInfo.short"></el-input>
+            </el-form-item>
+
+
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="dialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="goNext()">确 定</el-button>
+        </span>
+    </el-dialog>
+
+
+
+</div>
+
+
+<script src="../js/vue.js"></script>
+<script src="../element-ui/lib/index.js"></script>
+<link rel="stylesheet" href="../element-ui/lib/theme-chalk/index.css">
+
+<script src="../js/axios-0.18.0.js"></script>
+
+<script>
+    new Vue({
+        el: "#app",
+        created() {
+            // this.username=sessionStorage.username
+            // if (!this.username) {
+            //     window.location.href = "./index.html"
+            // }
+
+
+        },
+
+        mounted() {
+
+        },
+
+        methods: {
+
+            openError() {
+                console.log("aaa")
+            },
+            handleClose(done) {
+                this.$confirm('确认关闭？')
+                    .then(_ => {
+                        done();
+                    })
+                    .catch(_ => {});
+            },
+            goNext(){
+                sessionStorage.type="auto"
+                sessionStorage.simple=this.testInfo.simple
+                sessionStorage.multiple=this.testInfo.multiple
+                sessionStorage.short=this.testInfo.short
+                window.location.href = "test.html"
+            }
+
+        },
+        data() {
+            return {
+                dialogVisible: true,
+                testInfo:{
+                    simple:0,
+                    multiple:0,
+                    short:0,
+                }
+            }
+        }
+    })
+
+</script>
+
+</body>
+</html>
