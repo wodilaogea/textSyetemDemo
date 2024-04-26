@@ -49,12 +49,12 @@
 <script>
     new Vue({
         el: "#app",
-        // created(){
-        //     this.username=sessionStorage.username
-        //     if (!this.username) {
-        //         window.location.href = "./index.html"
-        //     }
-        // },
+        created(){
+            this.username=sessionStorage.username
+            if (!this.username) {
+                window.location.href = "./index.html"
+            }
+        },
 
         mounted(){
             

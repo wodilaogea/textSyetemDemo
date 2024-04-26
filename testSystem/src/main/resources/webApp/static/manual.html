@@ -244,10 +244,10 @@
     new Vue({
         el: "#app",
         created() {
-            // this.username=sessionStorage.username
-            // if (!this.username) {
-            //     window.location.href = "./index.html"
-            // }
+            this.username=sessionStorage.username
+            if (!this.username) {
+                window.location.href = "./index.html"
+            }
             this.initialization()
         },
 
